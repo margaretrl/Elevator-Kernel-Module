@@ -16,7 +16,7 @@ This project aims to provide a comprehensive understanding of system calls, kern
 
 ### Part 2: Timer Kernel Module
 - **Responsibilities**: [Description]
-- **Assigned to**: Hannah Housand, sophia quinoa
+- **Assigned to**: Hannah Housand, sophia quinoa, Margaret Rivas
 
 ### Part 3a: Adding System Calls
 - **Responsibilities**: [Description]
