@@ -50,15 +50,14 @@ static ssize_t timer_read(struct file *file, char __user *ubuf, size_t count, lo
 }
 
 // File operations for /proc: read
-static struct file_operations proc_ops = {
-    .owner = THIS_MODULE,
-    .read = timer_read,
+static struct proc_ops file_operations = {
+    .proc_read = timer_read,
 };
 
 // For load
 static int __init timer_init(void)
 {
-    timer_entry = proc_create("timer", 0444, NULL, &proc_ops); //Creates timer
+    timer_entry = proc_create("timer", 0444, NULL, &file_operations); //Creates timer
     if (!timer_entry) {
         return -ENOMEM; //returns memory error if failed
     }
