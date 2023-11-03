@@ -70,9 +70,17 @@ int add_passenger(int type)
         return -1;
 }
 
+    p = kmalloc(sizeof(Passenger) * 1, __GFP_RECLAIM);
+    if (p == NULL)
+        return -ENOMEM;
+
     p->id = type;
     p->weight = weight;
     p->name = name;
+
+    // added to back cuz FIFO
+    list_add_tail(&p->list, &passengers.list);
+
 
     passengers.total_cnt += 1;
     passengers.total_weight += weight;
@@ -105,7 +113,7 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     len += sprintf(buf + len, "[ ] Floor 2: \n");
     len += sprintf(buf + len, "[ ] Floor 1: \n");
 
-    len += sprintf(buf + len, "\nNumber of passengers: \n");
+    len += sprintf(buf + len, "\nNumber of passengers: %d\n", passengers.total_cnt);
     len += sprintf(buf + len, "Number of passengers waiting: \n");
     len += sprintf(buf + len, "Number of passengers serviced: \n");
 
