@@ -3,16 +3,17 @@
 #include <linux/module.h>
 #include <linux/syscalls.h>
 
-// Syscall Stubs
+// Stubs
 int (*STUB_start_elevator)(void) = NULL;
 int (*STUB_issue_request)(int, int, int) = NULL;
 int (*STUB_stop_elevator)(void) = NULL;
 
+// Export symbols
 EXPORT_SYMBOL(STUB_start_elevator);
 EXPORT_SYMBOL(STUB_issue_request);
 EXPORT_SYMBOL(STUB_stop_elevator);
 
-// Syscall Wrappers
+// Syscall wrappers
 SYSCALL_DEFINE0(start_elevator) {
     printk(KERN_NOTICE "Inside SYSCALL_DEFINE0 block. %s\n", __FUNCTION__);
     if(STUB_start_elevator != NULL)
@@ -36,3 +37,4 @@ SYSCALL_DEFINE0(stop_elevator) {
     else
         return -ENOSYS;
 }
+
