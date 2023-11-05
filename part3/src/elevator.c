@@ -33,9 +33,20 @@ struct {
 typedef struct passenger {
     int id;
     int weight;
+    int start_floor;
+    int dest_floor;
     const char *name;
     struct list_head list;
 } Passenger;
+
+struct elevator {
+    int state;
+    int current_floor;
+    int weight;
+    struct list_head passengers;
+    struct task_struct *elevator_thread;
+    struct mutex lock;
+} my_elevator;
 
 int add_passenger(int type)
 {
@@ -94,6 +105,52 @@ int del_passenger(int type)
 
     return 0;
 }
+
+// mutex thing idk
+static DEFINE_MUTEX(elevator_mutex);
+static int elevator_thread_function(void *data) {
+    // This thread will run until it's told to stop
+    while (!kthread_should_stop()) {
+        // Lock the mutex before accessing/changing shared data
+        mutex_lock(&elevator_mutex);
+
+        // Here you will check the state of the elevator and decide what to do next.
+        // For instance, if the elevator is not on the target floor, it should move towards it.
+        if (my_elevator.current_floor != my_elevator.target_floor) {
+            // Elevator logic to move to the next floor
+            if (my_elevator.current_floor < my_elevator.target_floor) {
+                my_elevator.current_floor++;
+            } else {
+                my_elevator.current_floor--;
+            }
+
+            // Simulate the time taken to move a floor
+            mutex_unlock(&elevator_mutex);
+            ssleep(2);
+            mutex_lock(&elevator_mutex);
+        } else {
+            // Elevator has reached the target floor
+            // Logic to load or unload passengers
+
+            // Simulate the time taken to load/unload passengers
+            mutex_unlock(&elevator_mutex);
+            ssleep(1);
+            mutex_lock(&elevator_mutex);
+
+            // Determine the next target floor based on the requests
+            // For now, let's just set a dummy floor - this is where your scheduling logic will go
+            my_elevator.target_floor = (my_elevator.target_floor % 6) + 1;
+        }
+
+        // After processing, release the mutex
+        mutex_unlock(&elevator_mutex);
+
+        // Sleep for a bit before the next iteration to not hog the CPU
+        msleep(20);
+    }
+    return 0;
+}
+
 // H attempt added stuff end
 
 static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
@@ -129,6 +186,19 @@ static const struct proc_ops elevator_fops = {
 
 static int __init elevator_init(void)
 {
+    // Initialize the elevator state
+    mutex_lock(&elevator_mutex);
+    my_elevator.current_floor = 1;
+    my_elevator.target_floor = 1;
+    my_elevator.weight = 0;
+    mutex_unlock(&elevator_mutex);
+
+    // Start the elevator thread
+    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
+    if (IS_ERR(elevator_thread)) {
+        // Handle error
+        return PTR_ERR(elevator_thread);
+    }
     elevator_entry = proc_create(ENTRY_NAME, PERMS, PARENT, &elevator_fops);
     if (!elevator_entry) {
         return -ENOMEM;
@@ -138,6 +208,7 @@ static int __init elevator_init(void)
 
 static void __exit elevator_exit(void)
 {
+    kthread_stop(elevator_thread);
     proc_remove(elevator_entry);
 }
 
