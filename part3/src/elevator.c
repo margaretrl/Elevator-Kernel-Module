@@ -1,6 +1,9 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
+
 
 
 MODULE_LICENSE("GPL");
@@ -12,6 +15,7 @@ MODULE_DESCRIPTION("Example of kernel module proc file for elevator");
 #define PARENT NULL
 
 static struct proc_dir_entry* elevator_entry;
+static struct task_struct *elevator_thread;
 
 // H attempt added stuff
 
@@ -42,6 +46,7 @@ typedef struct passenger {
 struct elevator {
     int state;
     int current_floor;
+    int target_floor;
     int weight;
     struct list_head passengers;
     struct task_struct *elevator_thread;
