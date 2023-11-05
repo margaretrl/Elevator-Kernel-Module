@@ -10,36 +10,61 @@ This project aims to provide a comprehensive understanding of system calls, kern
 ## Division of Labor
 
 ### Part 1: System Call Tracing
-- **Responsibilities**: [Description]
-- **Assigned to**: Hannah Housand, sophia quinoa, Margaret Rivas
+- **Responsibilities**:
+- [X] Create a baseline C/Rust program named "empty" with no system calls.
+- [X] Duplicate the "empty" program, naming the new copy "part1", and add exactly four system calls.
+- [X] Use the strace tool to ensure the correct number of system calls are added to "part1".
+- Completed by:
+- **Assigned to**: Hannah Housand, sophia quinoa
 
 
 ### Part 2: Timer Kernel Module
-- **Responsibilities**: [Description]
-- **Assigned to**: Hannah Housand, sophia quinoa, Margaret Rivas
+- **Responsibilities**:
+- [X] Develop a kernel module that uses ktime_get_real_ts64() to retrieve the current time in seconds and nanoseconds since the Unix Epoch.
+- [X] Ensure the module creates a proc entry "/proc/timer" when loaded and removes it when unloaded.
+- [X] Implement a read operation for "/proc/timer" to print the current time and the elapsed time since the last read.
+- Completed by:
+- **Assigned to**: Hannah Housand, sophia quinoa
 
 ### Part 3a: Adding System Calls
-- **Responsibilities**: [Description]
+- **Responsibilities**:
+- [X] Prepare kernel for compilation.
+- [X] Modify kernel files.
+- [X] Define system calls.
+- Completed by:
 - **Assigned to**: Hannah Housand, sophia quinoa
 
 ### Part 3b: Kernel Compilation
-- **Responsibilities**: [Description]
-- **Assigned to**: Alex Brown, Jane Smith
+- **Responsibilities**:
+- [X] Compile kernel with new system calls, disabling certificates.
+- [X] Check if installed.
+- Completed by: Hannah Housand, Margaret Rivas
+- **Assigned to**: Hannah Housand, Margaret Rivas
+
 
 ### Part 3c: Threads
-- **Responsibilities**: [Description]
+- **Responsibilities**:
+- [ ] Use a kthread to control the elevator movement.
+- Completed by:
 - **Assigned to**: Hannah Housand, sophia quinoa
 
 ### Part 3d: Linked List
-- **Responsibilities**: [Description]
+- **Responsibilities**:
+- [ ] Use linked lists to handle the number of passengers per floor/elevator.
+- Completed by:
 - **Assigned to**: Hannah Housand, Margaret Rivas
 
 ### Part 3e: Mutexes
-- **Responsibilities**: [Description]
+- **Responsibilities**:
+- [ ] Use a mutex to control shared data access between floor and elevators.
+- Completed by:
 - **Assigned to**: sophia quinoa, Margaret Rivas
 
 ### Part 3f: Scheduling Algorithm
-- **Responsibilities**: [Description]
+- **Responsibilities**:
+- [ ] Develop algorithm.
+- [ ] Use kmalloc to allocate dynamic memory for passengers.
+- Completed by:
 - **Assigned to**: sophia quinoa, Margaret Rivas
 
 ## File Listing
@@ -54,12 +79,17 @@ elevator/
 │   └── Makefile
 ├── part2/
 │   ├── src/
+│   │   ├── my_timer.c
+│   │   └── Makefile
+│   │   ├── my_timer.h
 │   └── Makefile
 ├── part3/
 │   ├── src/
+│   │   ├── elevator.c
+│   │   └── Makefile
 │   ├── tests/
 │   ├── Makefile
-│   └── sys_call.c
+│   └── syscalls.c
 ├── Makefile
 └── README.md
 
@@ -73,11 +103,10 @@ elevator/
 ## Part 1
 
 ### Compilation
-For a C/C++ example:
 ```bash
 make
 ```
-This will build the executable in ...
+This will build the executable in part1/
 ### Execution
 ```bash
 make run
@@ -91,7 +120,7 @@ For a C/C++ example:
 ```bash
 make
 ```
-This will build the executable in ...
+This will build the executable in part2/src/
 ### Execution
 ```bash
 make run
@@ -106,7 +135,7 @@ For a C/C++ example:
 ```bash
 make
 ```
-This will build the executable in ...
+This will build the executable in part3/src/
 ### Execution
 ```bash
 make run
@@ -120,4 +149,5 @@ This will run the program ...
 - **Bug 3**: This is bug 3.
 
 ## Considerations
-[Description]
+- The proc file will only be 10000 characters long.
+- Students will not leave from the same floor they entered from.
