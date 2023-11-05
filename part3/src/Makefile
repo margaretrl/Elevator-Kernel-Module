@@ -1,2 +1,1 @@
-obj-m += elevator.o
-
+obj-m := elevator.o

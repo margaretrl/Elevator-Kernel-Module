@@ -1,4 +1,4 @@
-obj-y := syscalls.o
+obj-m := elevator.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
