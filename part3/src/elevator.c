@@ -59,7 +59,31 @@ struct elevator {
 } my_elevator;
 
 int start_elevator_funct(void) {
-    // Your implementation here.
+    int err;
+
+    // Protect the elevator operations with a mutex
+    mutex_lock(&elevator_mutex);
+
+    // Check if the elevator is already running
+    if (elevator_thread) {
+        printk(KERN_NOTICE "Elevator is already started.\n");
+        mutex_unlock(&elevator_mutex);
+        return -EBUSY; // Elevator is already started
+    }
+
+    // Start the elevator thread
+    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
+    if (IS_ERR(elevator_thread)) {
+        err = PTR_ERR(elevator_thread);
+        elevator_thread = NULL;
+        printk(KERN_ALERT "Failed to start elevator thread: %d\n", err);
+        mutex_unlock(&elevator_mutex);
+        return err;
+    }
+
+    printk(KERN_NOTICE "Elevator started successfully.\n");
+    mutex_unlock(&elevator_mutex);
+    return 0;
 }
 
 int issue_request_funct(int start_floor, int destination_floor, int type) {
@@ -173,7 +197,20 @@ static int elevator_thread_function(void *data) {
     }
     return 0;
 }
-
+const char* get_elevator_state_string(elevator_state state) {
+    switch (state) {
+        case ELEVATOR_IDLE:
+            return "Idle";
+        case ELEVATOR_MOVING_UP:
+            return "Moving Up";
+        case ELEVATOR_MOVING_DOWN:
+            return "Moving Down";
+        case ELEVATOR_STOPPED:
+            return "Stopped";
+        default:
+            return "Unknown";
+    }
+}
 // H attempt added stuff end
 
 static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
@@ -181,7 +218,7 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     char buf[10000];
     int len = 0;
 
-    len = sprintf(buf, "Elevator state: \n");
+    len = sprintf(buf, "Elevator state: %s\n", get_elevator_state_string(my_elevator.state));
     len += sprintf(buf + len, "Current floor: \n");
     len += sprintf(buf + len, "Current load: \n");
     len += sprintf(buf + len, "Elevator status: \n");
