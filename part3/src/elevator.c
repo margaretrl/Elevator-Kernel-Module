@@ -19,6 +19,7 @@ static struct task_struct *elevator_thread;
 
 // H attempt added stuff
 
+
 #define  MAX_PASSENGERS 5
 #define MAX_WEIGHT 750
 
@@ -213,7 +214,8 @@ static int __init elevator_init(void)
 
 static void __exit elevator_exit(void)
 {
-    kthread_stop(elevator_thread);
+    if (elevator_thread) kthread_stop(elevator_thread);
+    mutex_destroy(&elevator_mutex);
     proc_remove(elevator_entry);
 }
 
