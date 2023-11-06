@@ -19,6 +19,10 @@ static struct task_struct *elevator_thread;
 
 // H attempt added stuff
 
+// I think these functions are like how you relate it to the syscalls
+extern int (*STUB_start_elevator)(void);
+extern int (*STUB_issue_request)(int, int, int);
+extern int (*STUB_stop_elevator)(void);
 
 #define  MAX_PASSENGERS 5
 #define MAX_WEIGHT 750
@@ -53,6 +57,19 @@ struct elevator {
     struct task_struct *elevator_thread;
     struct mutex lock;
 } my_elevator;
+
+int start_elevator_funct(void) {
+    // Your implementation here.
+}
+
+int issue_request_funct(int start_floor, int destination_floor, int type) {
+    // Your implementation here.
+}
+
+int stop_elevator_funct(void) {
+    // Your implementation here.
+}
+
 
 int add_passenger(int type)
 {
@@ -192,6 +209,10 @@ static const struct proc_ops elevator_fops = {
 
 static int __init elevator_init(void)
 {
+    STUB_start_elevator = start_elevator_funct;
+    STUB_issue_request = issue_request_funct;
+    STUB_stop_elevator = stop_elevator_funct;
+
     // Initialize the elevator state
     mutex_lock(&elevator_mutex);
     my_elevator.current_floor = 1;
@@ -199,24 +220,31 @@ static int __init elevator_init(void)
     my_elevator.weight = 0;
     mutex_unlock(&elevator_mutex);
 
-    // Start the elevator thread
-    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
-    if (IS_ERR(elevator_thread)) {
-        // Handle error
-        return PTR_ERR(elevator_thread);
-    }
+    // create proc entry
     elevator_entry = proc_create(ENTRY_NAME, PERMS, PARENT, &elevator_fops);
     if (!elevator_entry) {
         return -ENOMEM;
     }
+
+    // Start the elevator thread
+    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
+    if (IS_ERR(elevator_thread)) {
+        // Handle error
+        remove_proc_entry(ENTRY_NAME, NULL);
+        return PTR_ERR(elevator_thread);
+    }
+
     return 0;
 }
 
 static void __exit elevator_exit(void)
 {
     if (elevator_thread) kthread_stop(elevator_thread);
-    mutex_destroy(&elevator_mutex);
     proc_remove(elevator_entry);
+    STUB_start_elevator = NULL;
+    STUB_issue_request = NULL;
+    STUB_stop_elevator = NULL;
+    mutex_destroy(&elevator_mutex);
 }
 
 module_init(elevator_init);
