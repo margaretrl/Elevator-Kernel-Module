@@ -36,6 +36,9 @@ extern int (*STUB_stop_elevator)(void);
 
 // mutex thing idk
 static DEFINE_MUTEX(elevator_mutex);
+// like idek anymore
+DECLARE_WAIT_QUEUE_HEAD(elevator_wait_queue);
+static int pending_requests = 0;
 struct {
     int total_cnt;
     int total_weight;
@@ -133,8 +136,13 @@ static int elevator_thread_function(void *data) {
     // This thread will run until it's told to stop
     while (!kthread_should_stop()) {
         // Lock the mutex before accessing/changing shared data
-        mutex_lock(&elevator_mutex);
+        // Wait for a condition to be true before proceeding
+        wait_event_interruptible(elevator_wait_queue, has_pending_requests() || !keep_elevator_running);
 
+        if (kthread_should_stop())
+            break;
+        mutex_lock(&elevator_mutex);
+        /*
         // Here you will check the state of the elevator and decide what to do next.
         // For instance, if the elevator is not on the target floor, it should move towards it.
         if (my_elevator.current_floor != my_elevator.target_floor) {
@@ -161,7 +169,7 @@ static int elevator_thread_function(void *data) {
             // Determine the next target floor based on the requests
             // For now, let's just set a dummy floor - this is where your scheduling logic will go
             my_elevator.target_floor = (my_elevator.target_floor % 6) + 1;
-        }
+        }*/
 
         // After processing, release the mutex
         mutex_unlock(&elevator_mutex);
@@ -250,14 +258,16 @@ int start_elevator_funct(void) {
 }
 
 int issue_request_funct(int start_floor, int destination_floor, int type) {
-    // Your implementation here.
+    // handle request now
+    pending_requests++;
+    wake_up_interruptible(&elevator_wait_queue);
     return 0;
 }
 
 int stop_elevator_funct(void) {
     // Protect the elevator operations with a mutex
     mutex_lock(&elevator_mutex);
-
+    wake_up_interruptible(&elevator_wait_queue);
     // Check if the elevator is already running
     if ((my_elevator.state == ELEVATOR_UP) || (my_elevator.state == ELEVATOR_DOWN)) {
         printk(KERN_NOTICE "Elevator is busy.\n");
