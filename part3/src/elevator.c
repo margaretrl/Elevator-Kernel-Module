@@ -138,7 +138,7 @@ static int elevator_thread_function(void *data) {
     while (!kthread_should_stop()) {
         // Lock the mutex before accessing/changing shared data
         // Wait for a condition to be true before proceeding
-        wait_event_interruptible(elevator_wait_queue, has_pending_requests() || !keep_elevator_running);
+        wait_event_interruptible(elevator_wait_queue, (pending_requests > 0) || (my_elevator.state == ELEVATOR_OFFLINE));
 
         if (kthread_should_stop())
             break;
