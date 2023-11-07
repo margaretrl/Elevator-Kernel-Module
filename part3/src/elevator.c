@@ -182,7 +182,7 @@ static int elevator_thread_function(void *data) {
         mutex_unlock(&elevator_mutex);
 
         // Sleep for a bit before the next iteration to not hog the CPU
-        msleep(20);
+        msleep(2);
     }
     return 0;
 }
@@ -272,8 +272,10 @@ int start_elevator_funct(void) {
 
 int issue_request_funct(int start_floor, int destination_floor, int type) {
     // handle request now
+    mutex_lock(&elevator_mutex);
     pending_requests++;
     wake_up_interruptible(&elevator_wait_queue);
+    mutex_unlock(&elevator_mutex);
     return 0;
 }
 
@@ -311,8 +313,11 @@ int stop_elevator_funct(void) {
 
 
     // Set the elevator state to stopped
+
     my_elevator.state = ELEVATOR_OFFLINE;
+    pending_requests = 0;
     printk(KERN_NOTICE "Elevator stopped.\n");
+    mutex_unlock(&elevator_mutex);
 
     // Clean up or reset your elevator state and request data structures here
     // ...
