@@ -33,6 +33,9 @@ extern int (*STUB_stop_elevator)(void);
 #define PASS_SENIOR 3
 
 
+
+// mutex thing idk
+static DEFINE_MUTEX(elevator_mutex);
 struct {
     int total_cnt;
     int total_weight;
@@ -48,8 +51,15 @@ typedef struct passenger {
     struct list_head list;
 } Passenger;
 
+typedef enum{
+    ELEVATOR_IDLE,
+    ELEVATOR_MOVING_UP,
+    ELEVATOR_MOVING_DOWN,
+    ELEVATOR_STOPPED
+} elevator_state;
+
 struct elevator {
-    int state;
+    elevator_state state;
     int current_floor;
     int target_floor;
     int weight;
@@ -57,42 +67,6 @@ struct elevator {
     struct task_struct *elevator_thread;
     struct mutex lock;
 } my_elevator;
-
-int start_elevator_funct(void) {
-    int err;
-
-    // Protect the elevator operations with a mutex
-    mutex_lock(&elevator_mutex);
-
-    // Check if the elevator is already running
-    if (elevator_thread) {
-        printk(KERN_NOTICE "Elevator is already started.\n");
-        mutex_unlock(&elevator_mutex);
-        return -EBUSY; // Elevator is already started
-    }
-
-    // Start the elevator thread
-    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
-    if (IS_ERR(elevator_thread)) {
-        err = PTR_ERR(elevator_thread);
-        elevator_thread = NULL;
-        printk(KERN_ALERT "Failed to start elevator thread: %d\n", err);
-        mutex_unlock(&elevator_mutex);
-        return err;
-    }
-
-    printk(KERN_NOTICE "Elevator started successfully.\n");
-    mutex_unlock(&elevator_mutex);
-    return 0;
-}
-
-int issue_request_funct(int start_floor, int destination_floor, int type) {
-    // Your implementation here.
-}
-
-int stop_elevator_funct(void) {
-    // Your implementation here.
-}
 
 
 int add_passenger(int type)
@@ -153,8 +127,6 @@ int del_passenger(int type)
     return 0;
 }
 
-// mutex thing idk
-static DEFINE_MUTEX(elevator_mutex);
 static int elevator_thread_function(void *data) {
     // This thread will run until it's told to stop
     while (!kthread_should_stop()) {
@@ -243,6 +215,46 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
 static const struct proc_ops elevator_fops = {
     .proc_read = elevator_read,
 };
+
+
+int start_elevator_funct(void) {
+    int err;
+
+    // Protect the elevator operations with a mutex
+    mutex_lock(&elevator_mutex);
+
+    // Check if the elevator is already running
+    if (elevator_thread) {
+        printk(KERN_NOTICE "Elevator is already started.\n");
+        mutex_unlock(&elevator_mutex);
+        return -EBUSY; // Elevator is already started
+    }
+
+    // Start the elevator thread
+    elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
+    if (IS_ERR(elevator_thread)) {
+        err = PTR_ERR(elevator_thread);
+        elevator_thread = NULL;
+        printk(KERN_ALERT "Failed to start elevator thread: %d\n", err);
+        mutex_unlock(&elevator_mutex);
+        return err;
+    }
+
+    printk(KERN_NOTICE "Elevator started successfully.\n");
+    mutex_unlock(&elevator_mutex);
+    return 0;
+}
+
+int issue_request_funct(int start_floor, int destination_floor, int type) {
+    // Your implementation here.
+    return 0;
+}
+
+int stop_elevator_funct(void) {
+    // Your implementation here.
+    return 0;
+}
+
 
 static int __init elevator_init(void)
 {
