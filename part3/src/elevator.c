@@ -52,11 +52,13 @@ typedef struct passenger {
 } Passenger;
 
 typedef enum{
+    ELEVATOR_OFFLINE,
     ELEVATOR_IDLE,
-    ELEVATOR_MOVING_UP,
-    ELEVATOR_MOVING_DOWN,
-    ELEVATOR_STOPPED
+    ELEVATOR_LOADING,
+    ELEVATOR_UP,
+    ELEVATOR_DOWN
 } elevator_state;
+
 
 struct elevator {
     elevator_state state;
@@ -171,14 +173,16 @@ static int elevator_thread_function(void *data) {
 }
 const char* get_elevator_state_string(elevator_state state) {
     switch (state) {
+        case ELEVATOR_OFFLINE:
+            return "Offline";
         case ELEVATOR_IDLE:
             return "Idle";
-        case ELEVATOR_MOVING_UP:
+        case ELEVATOR_LOADING:
+            return "Loading";
+        case ELEVATOR_UP:
             return "Moving Up";
-        case ELEVATOR_MOVING_DOWN:
+        case ELEVATOR_DOWN:
             return "Moving Down";
-        case ELEVATOR_STOPPED:
-            return "Stopped";
         default:
             return "Unknown";
     }
@@ -224,11 +228,12 @@ int start_elevator_funct(void) {
     mutex_lock(&elevator_mutex);
 
     // Check if the elevator is already running
-    if (elevator_thread) {
+    if (my_elevator.state != ELEVATOR_OFFLINE) {
         printk(KERN_NOTICE "Elevator is already started.\n");
         mutex_unlock(&elevator_mutex);
         return -EBUSY; // Elevator is already started
     }
+    // should i check if elevatorstate isnt offline instead
 
     // Start the elevator thread
     elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
@@ -239,7 +244,7 @@ int start_elevator_funct(void) {
         mutex_unlock(&elevator_mutex);
         return err;
     }
-
+    my_elevator.state = ELEVATOR_IDLE;
     printk(KERN_NOTICE "Elevator started successfully.\n");
     mutex_unlock(&elevator_mutex);
     return 0;
@@ -264,6 +269,7 @@ static int __init elevator_init(void)
 
     // Initialize the elevator state
     mutex_lock(&elevator_mutex);
+    my_elevator.state = ELEVATOR_OFFLINE;
     my_elevator.current_floor = 1;
     my_elevator.target_floor = 1;
     my_elevator.weight = 0;
