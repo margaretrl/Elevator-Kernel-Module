@@ -259,7 +259,7 @@ int stop_elevator_funct(void) {
     mutex_lock(&elevator_mutex);
 
     // Check if the elevator is already running
-    if ((my_elevator.state == ELEVATOR_UP) || (my_elevator.state == ELEVATOR_DOWN) {
+    if ((my_elevator.state == ELEVATOR_UP) || (my_elevator.state == ELEVATOR_DOWN)) {
         printk(KERN_NOTICE "Elevator is busy.\n");
         mutex_unlock(&elevator_mutex);
         return -EBUSY; // Elevator is already started
@@ -284,7 +284,7 @@ int stop_elevator_funct(void) {
     }
 
     // Set the elevator state to stopped
-    elevator_state = ELEVATOR_STOPPED;
+    my_elevator.state = ELEVATOR_OFFLINE;
     printk(KERN_NOTICE "Elevator stopped.\n");
 
     // Clean up or reset your elevator state and request data structures here
@@ -327,8 +327,18 @@ static int __init elevator_init(void)
 
 static void __exit elevator_exit(void)
 {
-    if (elevator_thread) kthread_stop(elevator_thread);
-    proc_remove(elevator_entry);
+    // I think need to do like if waiting stuff
+    printk("elevator exit is being run");
+    if (elevator_thread) 
+    {
+        kthread_stop(elevator_thread);
+        elevator_thread = NULL;
+    }
+    if (elevator_entry)
+    {
+        proc_remove(elevator_entry);
+        elevator_entry = NULL;
+    }
     STUB_start_elevator = NULL;
     STUB_issue_request = NULL;
     STUB_stop_elevator = NULL;
