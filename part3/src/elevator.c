@@ -38,8 +38,9 @@ extern int (*STUB_stop_elevator)(void);
 static DEFINE_MUTEX(elevator_mutex);
 // like idek anymore
 DECLARE_WAIT_QUEUE_HEAD(elevator_wait_queue);
+
 static int pending_requests = 0;
-static bool keep_elevator_running = false;
+
 struct {
     int total_cnt;
     int total_weight;
@@ -248,7 +249,13 @@ int start_elevator_funct(void) {
         return -EBUSY; // Elevator is already started
     }
 
+    if (elevator_thread != NULL) {
+        printk(KERN_NOTICE "Elevator thread already exists.\n");
+        mutex_unlock(&elevator_mutex);
+        return -EBUSY; // Thread is already created
+    }
     // Start the elevator thread
+
     elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
     if (IS_ERR(elevator_thread)) {
         err = PTR_ERR(elevator_thread);
@@ -333,7 +340,7 @@ static int __init elevator_init(void)
     if (!elevator_entry) {
         return -ENOMEM;
     }
-
+    /*
     // Start the elevator thread
     elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
     if (IS_ERR(elevator_thread)) {
@@ -341,7 +348,7 @@ static int __init elevator_init(void)
         remove_proc_entry(ENTRY_NAME, NULL);
         return PTR_ERR(elevator_thread);
     }
-
+*/
     return 0;
 }
 
