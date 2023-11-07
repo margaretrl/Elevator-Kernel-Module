@@ -233,7 +233,6 @@ int start_elevator_funct(void) {
         mutex_unlock(&elevator_mutex);
         return -EBUSY; // Elevator is already started
     }
-    // should i check if elevatorstate isnt offline instead
 
     // Start the elevator thread
     elevator_thread = kthread_run(elevator_thread_function, NULL, "elevator_thread");
@@ -256,7 +255,41 @@ int issue_request_funct(int start_floor, int destination_floor, int type) {
 }
 
 int stop_elevator_funct(void) {
-    // Your implementation here.
+    // Protect the elevator operations with a mutex
+    mutex_lock(&elevator_mutex);
+
+    // Check if the elevator is already running
+    if ((my_elevator.state == ELEVATOR_UP) || (my_elevator.state == ELEVATOR_DOWN) {
+        printk(KERN_NOTICE "Elevator is busy.\n");
+        mutex_unlock(&elevator_mutex);
+        return -EBUSY; // Elevator is already started
+    }
+
+    // Signal the elevator thread to stop
+    if (elevator_thread) {
+        printk(KERN_NOTICE "Stopping the elevator thread.\n");
+        // Signal your thread to stop using a shared flag or condition
+
+        // Wake up the thread if it is sleeping
+        // ...
+
+        // Wait for the thread to finish
+        printk(KERN_NOTICE "Waiting for the elevator thread to finish.\n");
+        kthread_stop(elevator_thread);
+        elevator_thread = NULL;
+    }
+    else
+    {
+        return -EINVAL;
+    }
+
+    // Set the elevator state to stopped
+    elevator_state = ELEVATOR_STOPPED;
+    printk(KERN_NOTICE "Elevator stopped.\n");
+
+    // Clean up or reset your elevator state and request data structures here
+    // ...
+
     return 0;
 }
 
