@@ -39,6 +39,7 @@ static DEFINE_MUTEX(elevator_mutex);
 // like idek anymore
 DECLARE_WAIT_QUEUE_HEAD(elevator_wait_queue);
 static int pending_requests = 0;
+static bool keep_elevator_running = false;
 struct {
     int total_cnt;
     int total_weight;
@@ -142,6 +143,11 @@ static int elevator_thread_function(void *data) {
         if (kthread_should_stop())
             break;
         mutex_lock(&elevator_mutex);
+        if (my_elevator.state != ELEVATOR_OFFLINE)
+        {
+
+        }
+
         /*
         // Here you will check the state of the elevator and decide what to do next.
         // For instance, if the elevator is not on the target floor, it should move towards it.
@@ -269,6 +275,13 @@ int stop_elevator_funct(void) {
     mutex_lock(&elevator_mutex);
     wake_up_interruptible(&elevator_wait_queue);
     // Check if the elevator is already running
+    if ((my_elevator.state == ELEVATOR_OFFLINE) || !elevator_thread)
+    {
+        printk(KERN_INFO "Elevator is not running.\n");
+        return -EINVAL; // Elevator is not started
+    }
+
+
     if ((my_elevator.state == ELEVATOR_UP) || (my_elevator.state == ELEVATOR_DOWN)) {
         printk(KERN_NOTICE "Elevator is busy.\n");
         mutex_unlock(&elevator_mutex);
@@ -288,10 +301,7 @@ int stop_elevator_funct(void) {
         kthread_stop(elevator_thread);
         elevator_thread = NULL;
     }
-    else
-    {
-        return -EINVAL;
-    }
+
 
     // Set the elevator state to stopped
     my_elevator.state = ELEVATOR_OFFLINE;
@@ -339,11 +349,7 @@ static void __exit elevator_exit(void)
 {
     // I think need to do like if waiting stuff
     printk("elevator exit is being run");
-    if (elevator_thread) 
-    {
-        kthread_stop(elevator_thread);
-        elevator_thread = NULL;
-    }
+    stop_elevator_funct();
     if (elevator_entry)
     {
         proc_remove(elevator_entry);
