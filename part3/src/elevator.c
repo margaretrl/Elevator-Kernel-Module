@@ -210,8 +210,8 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     int len = 0;
 
     len = sprintf(buf, "Elevator state: %s\n", get_elevator_state_string(my_elevator.state));
-    len += sprintf(buf + len, "Current floor: \n");
-    len += sprintf(buf + len, "Current load: \n");
+    len += sprintf(buf + len, "Current floor: \n", my_elevator.current_floor);
+    len += sprintf(buf + len, "Current load: \n", my_elevator.weight);
     len += sprintf(buf + len, "Elevator status: \n");
 
     len += sprintf(buf + len, "\n[ ] Floor 6: \n");
@@ -222,11 +222,8 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     len += sprintf(buf + len, "[ ] Floor 1: \n");
 
     len += sprintf(buf + len, "\nNumber of passengers: %d\n", passengers.total_cnt);
-    len += sprintf(buf + len, "Number of passengers waiting: \n");
+    len += sprintf(buf + len, "Number of passengers waiting: \n", pending_requests);
     len += sprintf(buf + len, "Number of passengers serviced: \n");
-
-
-
 
     return simple_read_from_buffer(ubuf, count, ppos, buf, len); // better than copy_from_user
 }
