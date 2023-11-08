@@ -95,7 +95,7 @@ struct mutex building_lock;
 // POSSIBLY WE WILL USE THESE VARS
 
 int stop;
-static struct proc_dir_entry* proc_entry;
+static struct proc_dir_entry* proc_entry; //??
 int ppl_waiting_on_floor[7];
 int ppl_serviced = 0; //initialize to 0
 
