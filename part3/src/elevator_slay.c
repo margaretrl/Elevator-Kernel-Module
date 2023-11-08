@@ -295,6 +295,7 @@ const char* get_elevator_state_string(elevator_state state) {
 
 static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
 {
+    /*
     char *buf = kmalloc(sizeof(char) * 800, __GFP_RECLAIM);
     int len = 0;
     struct list_head *temp;
@@ -304,6 +305,9 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     if (buf == NULL) {
         return -ENOMEM; // Return an error code indicating memory allocation failure
     }
+*/
+    char buf[10000];
+    int len = 0;
 
     // New stuff
     int total_waiting = 0;
@@ -318,19 +322,7 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
         len += sprintf(buf + len, "Current load: %d lbs\n", my_elevator.weight);
 
         // Printing out floor structure
-        for (int i = 7; i > 0; i--) {
-            char* floor_marker;
-            if (i == my_elevator.current_floor) {
-                floor_marker = "*";
-            } else {
-                floor_marker = " ";
-            }
-            len += sprintf(buf + len, "[%s] Floor %d: %d ", floor_marker, i, ppl_waiting_on_floor[i]);
-            list_for_each(temp, &building[i]) {
-            p = list_entry(temp, Passenger, list);
-            len += sprintf(buf + len, "%s ", p->s_type);
-            }
-        }
+        
 
 
         

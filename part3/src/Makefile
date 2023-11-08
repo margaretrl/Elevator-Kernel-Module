@@ -1,1 +1,1 @@
-obj-m += elevator_slay.o
+obj-m += elevator.o

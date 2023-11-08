@@ -1,4 +1,4 @@
-obj-m := elevator_slay.o
+obj-m := elevator.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 

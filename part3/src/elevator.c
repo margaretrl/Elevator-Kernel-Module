@@ -40,7 +40,7 @@ static DEFINE_MUTEX(elevator_mutex);
 DECLARE_WAIT_QUEUE_HEAD(elevator_wait_queue);
 
 static int pending_requests = 0;
-
+int ppl_waiting_on_floor[7];
 struct {
     int total_cnt;
     int total_weight;
@@ -52,7 +52,7 @@ typedef struct passenger {
     int weight;
     int start_floor;
     int dest_floor;
-    const char *name;
+    char s_type;
     struct list_head list;
 } Passenger;
 
@@ -70,16 +70,21 @@ struct elevator {
     int current_floor;
     int target_floor;
     int weight;
+    int ppl_on_board;
+    int status;
     struct list_head passengers;
     struct task_struct *elevator_thread;
     struct mutex lock;
 } my_elevator;
 
+struct list_head building[7];
+int ppl_waiting_on_floor[7];
+int ppl_serviced = 0; //initialize to 0
 
 int add_passenger(int type)
 {
     int weight;
-    char *name;
+    char name;
     Passenger *p;
 
     if (passengers.total_cnt >= MAX_PASSENGERS)
@@ -115,7 +120,7 @@ int add_passenger(int type)
 
     p->id = type;
     p->weight = weight;
-    p->name = name;
+    p->s_type = name;
 
     // added to back cuz FIFO
     list_add_tail(&p->list, &passengers.list);
@@ -206,14 +211,37 @@ const char* get_elevator_state_string(elevator_state state) {
 
 static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
 {
+    mutex_lock(&my_elevator.lock);
+
     char buf[10000];
     int len = 0;
+    Passenger *p;
 
     len = sprintf(buf, "Elevator state: %s\n", get_elevator_state_string(my_elevator.state));
     len += sprintf(buf + len, "Current floor: \n", my_elevator.current_floor);
     len += sprintf(buf + len, "Current load: \n", my_elevator.weight);
     len += sprintf(buf + len, "Elevator status: \n");
 
+
+    int total_waiting = 0;
+    for (int i = 1; i < 7; i++) {
+         total_waiting += ppl_waiting_on_floor[i];
+    }
+    struct list_head *temp;
+    for (int i = 7; i > 0; i--) {
+        char* floor_marker;
+        if (i == my_elevator.current_floor) {
+            floor_marker = "*";
+        } else {
+            floor_marker = " ";
+        }
+        len += sprintf(buf + len, "[%s] Floor %d: %d ", floor_marker, i, ppl_waiting_on_floor[i]);
+        list_for_each(temp, &building[i]) {
+        p = list_entry(temp, Passenger, list);
+        len += sprintf(buf + len, "%s ", p->s_type);
+        }
+    }
+/*
     len += sprintf(buf + len, "\n[ ] Floor 6: \n");
     len += sprintf(buf + len, "[ ] Floor 5: \n");
     len += sprintf(buf + len, "[ ] Floor 4: \n");
@@ -224,9 +252,15 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
     len += sprintf(buf + len, "\nNumber of passengers: %d\n", passengers.total_cnt);
     len += sprintf(buf + len, "Number of passengers waiting: \n", pending_requests);
     len += sprintf(buf + len, "Number of passengers serviced: \n");
-
+*/
+    mutex_unlock(&my_elevator.lock);
     return simple_read_from_buffer(ubuf, count, ppos, buf, len); // better than copy_from_user
+    // dont know if need this next line
+    // Free allocated memory for buf
+    kfree(buf);
+
 }
+
 
 static const struct proc_ops elevator_fops = {
     .proc_read = elevator_read,
