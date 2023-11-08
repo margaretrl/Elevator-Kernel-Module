@@ -73,7 +73,7 @@ typedef struct passenger {
     int weight;
     int start_floor;
     int dest_floor;
-    const char s_type; //student type
+    char s_type; //student type
     struct list_head list;
 } Passenger;
 
@@ -113,7 +113,7 @@ int add_passenger(int type)
     char s_type;
     Passenger *p;
 
-    if (passengers.total_cnt >= MAX_PASSENGERS)
+    if (my_elevator.ppl_on_board >= MAX_PASSENGERS)
         return 0;
 
 // switch on what is inputted into add passenger and its gonna get called in elevator_proc_open i think
@@ -148,11 +148,12 @@ int add_passenger(int type)
     p->s_type = s_type;
 
     // added to back cuz FIFO
-    list_add_tail(&p->list, &passengers.list);
+    list_add_tail(&p->list, &my_elevator.passengers);
 
 
-    passengers.total_cnt += 1;
-    passengers.total_weight += weight;
+    my_elevator.ppl_on_board += 1;
+
+    my_elevator.weight += weight;
 
     return 0;
 }
@@ -296,6 +297,8 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
 {
     char *buf = kmalloc(sizeof(char) * 800, __GFP_RECLAIM);
     int len = 0;
+    struct list_head *temp;
+    Passenger *p;
 
     // Check if buf allocation was successful
     if (buf == NULL) {
@@ -309,7 +312,7 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
         total_waiting += ppl_waiting_on_floor[i];
     }
 
-    if (mutex_lock_interruptible(&Elevator.mutex) == 0) {
+    if (mutex_lock_interruptible(&my_elevator.lock) == 0) {
         len = sprintf(buf, "Elevator state: %s\n", get_elevator_state_string(my_elevator.state));
         len += sprintf(buf + len, "Current floor: %d\n", my_elevator.current_floor);
         len += sprintf(buf + len, "Current load: %d lbs\n", my_elevator.weight);
@@ -323,15 +326,16 @@ static ssize_t elevator_read(struct file *file, char __user *ubuf, size_t count,
                 floor_marker = " ";
             }
             len += sprintf(buf + len, "[%s] Floor %d: %d ", floor_marker, i, ppl_waiting_on_floor[i]);
-        }
-
-
-        list_for_each(temp, &building[i]) {
-            p = list_entry(temp, Passenger, passengerList);
+            list_for_each(temp, &building[i]) {
+            p = list_entry(temp, Passenger, list);
             len += sprintf(buf + len, "%s ", p->s_type);
+            }
         }
 
-        len += sprintf(buf + len, "\nNumber of passengers: %d\n", passengers.total_cnt);
+
+        
+
+        len += sprintf(buf + len, "\nNumber of passengers: %d\n", my_elevator.ppl_on_board);
         len += sprintf(buf + len, "Number of passengers waiting: %d\n", pending_requests);
         len += sprintf(buf + len, "Number of passengers serviced: %d\n", ppl_serviced);
 
