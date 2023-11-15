@@ -435,11 +435,11 @@ long issue_request(int start_floor, int destination_floor, int type) {
         Passenger *temp; //Create passenger
         temp = kmalloc(sizeof(Passenger), __GFP_RECLAIM);
         if(mutex_lock_interruptible(&my_elevator.lock) == 0) {
-            // Add passenger values
+            // initialize passenger data based on the request 
             temp->type = type;
             temp->start_floor = start_floor;
             temp->dest_floor = destination_floor;
-            switch(type) {
+            switch(type) { //assign weight based on type 
                 case 0:
                     temp->weight = FRESH_WEIGHT;
                     break;
@@ -454,7 +454,8 @@ long issue_request(int start_floor, int destination_floor, int type) {
                     break;
             }
       
-            // my added stuff !!!
+            //add passenger to building list and update waiting count
+            //handle based on current elevator status 
             if(my_elevator.status == 1)
             {
                 my_elevator.target_floor = temp->start_floor; 
@@ -499,7 +500,7 @@ long issue_request(int start_floor, int destination_floor, int type) {
 // START_ELEVATOR Syscall Function
 long start_elevator(void) {
     int i;
-    int temp_target = 0;
+    int temp_target = 0; //temp target floor
     if(mutex_lock_interruptible(&my_elevator.lock) == 0) {
         //Check if elevator is already running
         if(my_elevator.status != 1) {
