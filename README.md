@@ -26,6 +26,7 @@ This project aims to provide a comprehensive understanding of system calls, kern
 - **Completed by**: Margaret Rivas, Hannah Housand, Sophia Quinoa
 - **Assigned to**: Hannah Housand, Sophia Quinoa
 
+
 ### Part 3a: Adding System Calls
 - **Responsibilities**:
 - [X] Prepare kernel for compilation.
@@ -33,6 +34,7 @@ This project aims to provide a comprehensive understanding of system calls, kern
 - [X] Define system calls.
 - **Completed by**: Margaret Rivas, Hannah Housand, Sophia Quinoa
 - **Assigned to**: Hannah Housand, Sophia Quinoa
+
 
 ### Part 3b: Kernel Compilation
 - **Responsibilities**:
@@ -48,11 +50,13 @@ This project aims to provide a comprehensive understanding of system calls, kern
 - **Completed by**: Hannah Housand, Sophia Quinoa
 - **Assigned to**: Hannah Housand, Sophia Quinoa
 
+
 ### Part 3d: Linked List
 - **Responsibilities**:
 - [X] Use linked lists to handle the number of passengers per floor/elevator.
 - **Completed by**: Hannah Housand, Margaret Rivas
 - **Assigned to**: Hannah Housand, Margaret Rivas
+
 
 ### Part 3e: Mutexes
 - **Responsibilities**:
@@ -60,12 +64,14 @@ This project aims to provide a comprehensive understanding of system calls, kern
 - **Completed by**: Sophia Quinoa, Margaret Rivas
 - **Assigned to**: Sophia Quinoa, Margaret Rivas
 
+
 ### Part 3f: Scheduling Algorithm
 - **Responsibilities**:
 - [X] Develop algorithm.
 - [X] Use kmalloc to allocate dynamic memory for passengers.
 - **Completed by**: Sophia Quinoa, Margaret Rivas, Hannah Housand
 - **Assigned to**: Sophia Quinoa, Margaret Rivas
+
 
 ## File Listing
 ```
@@ -122,11 +128,18 @@ make
 ```
 This will build the executable in part2/src/
 ### Execution
+To insert a kernel module:
 ```bash
-make run
+sudo insmod my_timer.ko
 ```
-This will run the program ...
-
+To remove a kernel module:
+```bash
+sudo rmmod my_timer.ko
+```
+To check for your kernel module:
+```bash
+lsmod | grep my_timer
+```
 
 ## Part 3
 
