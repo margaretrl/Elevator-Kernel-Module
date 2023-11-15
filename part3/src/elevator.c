@@ -16,7 +16,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("cop4610t");
 MODULE_DESCRIPTION("Example of kernel module proc file for elevator");
 
-// Global Constants Definition
+//define constants related to elevator operation
 #define MAX_WEIGHT 750
 #define MAX_PASSENGERS 5        //We do not have a check for this yet, we need to add it
 #define FRESH_WEIGHT 100
@@ -27,7 +27,7 @@ MODULE_DESCRIPTION("Example of kernel module proc file for elevator");
 #define MAX_FLOOR 6
 
 
-// Structs Definition
+// Structs Definition of passenger struct with linked list 
 typedef struct passenger {
    int start_floor;
    int dest_floor;
@@ -36,6 +36,7 @@ typedef struct passenger {
    struct list_head passengers; // to be used for linked list: link passengers together
 } Passenger;
 
+//elevator struct 
 struct elevator {
    int current_floor;
    int target_floor;
@@ -47,13 +48,16 @@ struct elevator {
    struct mutex lock;
 };
 
+//globals for building and elevator control 
 struct list_head building[7];
 struct mutex building_lock;
 
+//profile related variables 
 static struct proc_dir_entry* proc_entry;
 static int read_proc;   // procfile reading
 int stop;               // --stop check  
 
+//elevator instance 
 struct elevator my_elevator;
 int passengers_waiting[7];               
 int serviced_passengers;
@@ -62,6 +66,7 @@ int none_waiting; // bool
 static char *output;    // str to store output to proc       
 
 
+//function declarations for elevator operations 
 int elevator(void *data);
 void add_passenger(void);
 void del_passenger(void);
@@ -82,6 +87,8 @@ static int procfile_open(struct inode *inode, struct file *file) {
    return output_print();
   
 }
+
+// read proc file and copy its contents to user buffer 
 static ssize_t procfile_read(struct file* file, char __user *buf, size_t size, loff_t *offset) {
     int len = strlen(output);
     int ret;
@@ -96,11 +103,13 @@ static ssize_t procfile_read(struct file* file, char __user *buf, size_t size, l
     return len;
 }
 
+//release the procfile and free allocated memory 
 int procfile_release(struct inode *sp_inode, struct file *sp_file) {
    kfree(output);
    return 0;
 }
 
+// file ops for proc file 
 static struct proc_ops procfile_fops = {
     .proc_open = procfile_open,
     .proc_read = procfile_read,
@@ -112,6 +121,7 @@ static struct proc_ops procfile_fops = {
 
 // Elevator Handler Functions
 
+//main elevator thread function
 int elevator(void *data) {
     struct elevator *elevator_data = data;
     while(!kthread_should_stop()) {
@@ -278,7 +288,7 @@ void del_passenger(void){
 
 
 
-// Output Function
+// Output Function; print elevator current stat to proc 
 int output_print(void) {
 
     char *buf = kmalloc(sizeof(char)*800,__GFP_RECLAIM);
@@ -404,12 +414,12 @@ int output_print(void) {
 }
 
 
-// Syscalls
+// Syscalls; functions implement the sytem calls for elevator control
 extern long(*STUB_issue_request)(int,int,int);
 extern long(*STUB_start_elevator)(void);
 extern long(*STUB_stop_elevator)(void);
 
-// ISSUE_REQUEST Syscall Function
+// ISSUE_REQUEST Syscall Function to issue a request to elevator 
 long issue_request(int start_floor, int destination_floor, int type) {
     printk(KERN_NOTICE "%s: the three values are %d %d %d\n",
         __FUNCTION__,start_floor,destination_floor,type);
