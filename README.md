@@ -155,3 +155,4 @@ We test our elevator program by running "make" inside of elevator_tests and then
 ## Considerations
 - The proc file will only be 10000 characters long.
 - Students will not leave from the same floor they entered from.
+- Building only has 6 floors and only 5 people can ride on the elevator at a time as long as they do not exceed the max weight value of 750 lbs.
