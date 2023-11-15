@@ -421,7 +421,7 @@ long issue_request(int start_floor, int destination_floor, int type) {
     }
 
     // Check if elevator has been stopped
-    if(stop == 0) {
+    //if(stop == 0) {
         Passenger *temp; //Create passenger
         temp = kmalloc(sizeof(Passenger), __GFP_RECLAIM);
         if(mutex_lock_interruptible(&my_elevator.lock) == 0) {
@@ -444,7 +444,13 @@ long issue_request(int start_floor, int destination_floor, int type) {
                     break;
             }
       
-  
+            // my added stuff !!!
+            if(my_elevator.status == 1)
+            {
+                my_elevator.target_floor = temp->start_floor; 
+                list_add_tail(&temp->passengers, &building[start_floor]);
+                passengers_waiting[start_floor]++;
+            }
             // If elevator is IDLE at time of passenger addition
            if(my_elevator.status == 2)
            {
@@ -475,7 +481,7 @@ long issue_request(int start_floor, int destination_floor, int type) {
             }
             mutex_unlock(&my_elevator.lock);
         }
-    }
+    //} 
     return 0;
 }
 
