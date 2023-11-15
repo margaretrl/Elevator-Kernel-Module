@@ -89,7 +89,7 @@ static int procfile_open(struct inode *inode, struct file *file) {
 }
 
 // read proc file and copy its contents to user buffer 
-static ssize_t procfile_read(struct file* file, char __user *buf, size_t size, loff_t *offset) {
+static ssize_t procfile_read(struct file* file, char __user *buf, size_t size, loff_t *offset){
     int len = strlen(output);
     int ret;
     read_proc = !read_proc;
@@ -136,7 +136,7 @@ int elevator(void *data) {
                         add_passenger();
                         }
                     if(my_elevator.ppl_on_board == 0 && stop != 1 &&
-                        my_elevator.target_floor == my_elevator.current_floor && none_waiting == 0) {
+                        my_elevator.target_floor==my_elevator.current_floor && none_waiting==0){
 
                         if(my_elevator.current_floor < 6) {
                             my_elevator.target_floor = my_elevator.current_floor++;
@@ -212,8 +212,9 @@ void add_passenger(void){
             list_for_each_safe(temp, next_node, &building[my_elevator.current_floor]) {
                 pass_temp = list_entry(temp, Passenger, passengers);
 
-                // Weight and Num Passengers check: move from buildng to elevator if max not surpassed
-                if(((pass_temp->weight + my_elevator.weight) < MAX_WEIGHT) && (my_elevator.ppl_on_board < MAX_PASSENGERS)) {
+                // Weight & # Passengers check: move from buildng to elevator if max not passed
+                if(((pass_temp->weight + my_elevator.weight) < MAX_WEIGHT) && 
+                (my_elevator.ppl_on_board < MAX_PASSENGERS)) {
                     my_elevator.ppl_on_board++;
                     my_elevator.weight = my_elevator.weight + pass_temp->weight;
                     my_elevator.target_floor = pass_temp->dest_floor;    // set target floor
@@ -238,7 +239,7 @@ void del_passenger(void){
         return;
     }
 
-    printk(KERN_NOTICE "Deleting/ Unloading passengers at floor %d\n", my_elevator.current_floor);
+    printk(KERN_NOTICE "Deleting/Unloading passengers at floor %d\n", my_elevator.current_floor);
 
     INIT_LIST_HEAD(&move_list);
 
@@ -277,7 +278,7 @@ void del_passenger(void){
         }
     }
 
-    // If building is not empty, we take first enttry and set their target floor as destination floor
+    // If building is not empty, we take first entry & set target floor as destination floor
     if(my_elevator.ppl_on_board > 0) {
         Passenger *person;
         person = list_first_entry(&my_elevator.passengers, Passenger, passengers);
@@ -484,7 +485,7 @@ long issue_request(int start_floor, int destination_floor, int type) {
             }
            
             // If elevator is moving (aka. not IDLE), we simply add passengers
-            else if (my_elevator.status == 3 || my_elevator.status == 4 || my_elevator.status == 5) {
+            else if (my_elevator.status==3 || my_elevator.status==4 || my_elevator.status== 5){
 
                     none_waiting = 0;
                     list_add_tail(&temp->passengers, &building[start_floor]);
@@ -673,6 +674,3 @@ static void elevator_exit(void) {
 }
 
 module_exit(elevator_exit);
-
-
- 

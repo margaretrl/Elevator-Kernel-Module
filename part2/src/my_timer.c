@@ -30,7 +30,7 @@ static ssize_t timer_read(struct file *file, char __user *ubuf, size_t count, lo
                 diff_ts.tv_sec, diff_ts.tv_nsec);
     }
     else {  // First read cade
-        snprintf(buf, sizeof(buf), "current time: %lld.%09ld\n", curr_ts.tv_sec, curr_ts.tv_nsec);
+        snprintf(buf, sizeof(buf),"current time: %lld.%09ld\n", curr_ts.tv_sec, curr_ts.tv_nsec);
     }
 
     // Update last_time for next read
